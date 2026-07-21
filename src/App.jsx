@@ -28,6 +28,9 @@ import {
   Shield,
   Sun,
   Moon,
+  HelpCircle,
+  Copy,
+  Check,
 } from "lucide-react";
 
 const ATTRS = [
@@ -43,6 +46,12 @@ const ATTRS = [
 ];
 
 const POSITIONS = ["Top", "Jungle", "Mid", "Adc", "Support"];
+
+const SAVE_PATHS = [
+  { os: "Windows", path: "%APPDATA%\\com.openleaguemanager.olmanager\\saves" },
+  { os: "macOS", path: "~/Library/Application Support/com.openleaguemanager.olmanager/saves" },
+  { os: "Linux", path: "~/.local/share/com.openleaguemanager.olmanager/saves" },
+];
 
 const POS_COLOR = {
   Top: "var(--pos-top)",
@@ -138,6 +147,71 @@ function FlagImg({ code, size = 16 }) {
       style={{ objectFit: "cover", verticalAlign: "middle", flexShrink: 0 }}
       onError={() => setFailed(true)}
     />
+  );
+}
+
+function SaveLocationHelp() {
+  const [open, setOpen] = useState(false);
+  const [copiedIdx, setCopiedIdx] = useState(null);
+
+  async function copyPath(path, idx) {
+    try {
+      await navigator.clipboard.writeText(path);
+      setCopiedIdx(idx);
+      setTimeout(() => setCopiedIdx(null), 1500);
+    } catch (e) {
+      // clipboard API unavailable — the path is still visible to select/copy manually
+    }
+  }
+
+  return (
+    <div style={{ position: "relative" }}>
+      <button
+        className="rr-icon-btn"
+        onClick={() => setOpen((o) => !o)}
+        aria-label="Where's my save file?"
+        aria-expanded={open}
+        title="Where's my save file?"
+      >
+        <HelpCircle size={15} />
+      </button>
+      {open && (
+        <>
+          <div
+            onClick={() => setOpen(false)}
+            style={{ position: "fixed", inset: 0, zIndex: 40 }}
+            aria-hidden="true"
+          />
+          <div
+            className="rr-card"
+            style={{ position: "absolute", top: "calc(100% + 6px)", right: 0, width: "340px", zIndex: 50, padding: "14px" }}
+          >
+            <p style={{ fontSize: "13px", fontWeight: 600, margin: "0 0 4px" }}>Where's my save?</p>
+            <p style={{ fontSize: "12px", color: "var(--text-muted)", margin: "0 0 12px" }}>
+              A browser can't jump a file picker to a folder automatically — but you can copy the path below and paste it into the picker's address bar to get there instantly.
+            </p>
+            {SAVE_PATHS.map((p, i) => (
+              <div key={p.os} style={{ marginBottom: i < SAVE_PATHS.length - 1 ? "10px" : 0 }}>
+                <div style={{ fontSize: "11px", color: "var(--text-faint)", marginBottom: "3px" }}>{p.os}</div>
+                <div style={{ display: "flex", gap: "6px", alignItems: "center" }}>
+                  <code style={{ flex: 1, fontSize: "11px", background: "var(--surface-alt)", padding: "6px 8px", overflowX: "auto", whiteSpace: "nowrap", color: "var(--text)" }}>
+                    {p.path}
+                  </code>
+                  <button
+                    className="rr-icon-btn"
+                    onClick={() => copyPath(p.path, i)}
+                    aria-label={`Copy ${p.os} save path`}
+                    style={{ flexShrink: 0 }}
+                  >
+                    {copiedIdx === i ? <Check size={13} /> : <Copy size={13} />}
+                  </button>
+                </div>
+              </div>
+            ))}
+          </div>
+        </>
+      )}
+    </div>
   );
 }
 
@@ -918,6 +992,7 @@ export default function RiftRoom() {
               </span>
             )}
             <input type="file" accept=".json,.olsave" ref={fileInputRef} onChange={handleFileUpload} style={{ display: "none" }} />
+            <SaveLocationHelp />
             <button className="rr-btn rr-btn-outline" onClick={() => fileInputRef.current.click()} disabled={importing} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text)", padding: "8px 14px", borderRadius: "0", fontSize: "13px", display: "flex", alignItems: "center", gap: "6px" }}>
               <Upload size={14} /> {importing ? "Importing…" : "Import"}
             </button>
@@ -951,6 +1026,9 @@ export default function RiftRoom() {
                 <button className="rr-btn rr-btn-outline" onClick={() => fileInputRef.current.click()} style={{ background: "transparent", border: "1px solid var(--border)", color: "var(--text)", padding: "9px 18px", borderRadius: "0", fontSize: "13px" }}>Import save file</button>
                 <button className="rr-btn rr-btn-primary" onClick={startAdd} style={{ background: ACCENT, color: "var(--on-accent)", padding: "9px 18px", borderRadius: "0", fontSize: "13px" }}>Add player</button>
               </div>
+              <p style={{ fontSize: "11px", color: "var(--text-faint)", marginTop: "14px" }}>
+                Not sure where your save is? Click the <HelpCircle size={11} style={{ verticalAlign: "-1px" }} /> icon next to Import above, or on Windows check <code style={{ background: "var(--surface-alt)", padding: "1px 4px" }}>%APPDATA%\com.openleaguemanager.olmanager\saves</code>.
+              </p>
             </div>
           ) : (
             <>
