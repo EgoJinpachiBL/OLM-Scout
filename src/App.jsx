@@ -369,6 +369,7 @@ export default function RiftRoom() {
   const [importMsg, setImportMsg] = useState(null);
   const [importing, setImporting] = useState(false);
   const [confirmClear, setConfirmClear] = useState(false);
+  const [copiedId, setCopiedId] = useState(null);
 
   const [teamFilter, setTeamFilter] = useState("all");
   const [leagueFilter, setLeagueFilter] = useState("all");
@@ -447,6 +448,14 @@ export default function RiftRoom() {
 
   function toggleFavorite(id) {
     setFavorites((prev) => (prev.includes(id) ? prev.filter((f) => f !== id) : [...prev, id]));
+  }
+
+  async function copyName(id, name) {
+    try {
+      await navigator.clipboard.writeText(name);
+      setCopiedId(id);
+      setTimeout(() => setCopiedId(null), 1200);
+    } catch (e) {}
   }
 
   function startAdd() {
@@ -893,7 +902,7 @@ export default function RiftRoom() {
         <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
           <div style={{ display: "flex", gap: "4px", background: "var(--surface)", border: "1px solid var(--border-subtle)", borderRadius: "0", padding: "3px" }}>
             {[
-              { id: "squad", label: "Squad", icon: Users },
+              { id: "squad", label: "Players", icon: Users },
               { id: "myteam", label: "My Team", icon: Shield },
               { id: "compare", label: "Compare", icon: GitCompare },
             ].map(({ id, label, icon: Icon }) => (
@@ -1076,6 +1085,9 @@ export default function RiftRoom() {
                             <td className="rr-td">
                               <div style={{ fontWeight: 600, display: "flex", alignItems: "center", gap: "6px" }}>
                                 <FlagImg code={p.nationality} size={13} /> {p.match_name}
+                                <button className="rr-btn" onClick={() => copyName(p.id, p.match_name)} style={{ background: "transparent", color: copiedId === p.id ? "var(--success)" : "var(--text-faint)", padding: "2px", display: "flex" }} aria-label={`Copy ${p.match_name}'s name`} title="Copy name">
+                                  {copiedId === p.id ? <Check size={12} /> : <Copy size={12} />}
+                                </button>
                               </div>
                               {p.full_name && <div style={{ fontSize: "11px", color: "var(--text-faint)" }}>{p.full_name}</div>}
                             </td>
@@ -1116,7 +1128,12 @@ export default function RiftRoom() {
                         <div style={{ display: "flex", justifyContent: "space-between", alignItems: "flex-start", marginBottom: "8px" }}>
                           <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
                             <div>
-                              <p style={{ fontWeight: 600, fontSize: "15px", margin: 0 }}>{p.match_name}</p>
+                              <p style={{ fontWeight: 600, fontSize: "15px", margin: 0, display: "flex", alignItems: "center", gap: "6px" }}>
+                                {p.match_name}
+                                <button className="rr-btn" onClick={() => copyName(p.id, p.match_name)} style={{ background: "transparent", color: copiedId === p.id ? "var(--success)" : "var(--text-faint)", padding: "2px", display: "flex" }} aria-label={`Copy ${p.match_name}'s name`} title="Copy name">
+                                  {copiedId === p.id ? <Check size={12} /> : <Copy size={12} />}
+                                </button>
+                              </p>
                               <p style={{ fontSize: "11px", color: "var(--text-faint)", margin: "1px 0 0" }}>{p.position} &middot; {p.team_name || "Free agent"}</p>
                             </div>
                           </div>
